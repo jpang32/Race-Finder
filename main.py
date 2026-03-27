@@ -4,7 +4,7 @@ from anthropic import Anthropic
 import requests
 from bs4 import BeautifulSoup
 
-from models.race_query import RaceQuery
+from models import RaceQuery
 
 def main():
     print("Hello from race-finder!")

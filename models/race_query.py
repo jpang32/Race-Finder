@@ -1,16 +1,31 @@
-from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Optional, Literal, Union
 
 from enum import Enum
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, Field
 
-class RaceType(str, Enum):
+class RaceType(Enum):
     FIVE_K = "5k"
     TEN_K = "10k"
     HALF_MARATHON = "half-marathon"
     MARATHON = "marathon"
     DUATHLON = "duathlon"
 
+class USA(BaseModel):
+    country_code = Literal["USA"]
+    state: str
+    county: str
+    town: str
+
+class Canada(BaseModel):
+    country_code = Literal["CAN"]
+    # "province" can also be set to the name of a territory
+    province: str
+    city: str
+
+class Italy(BaseModel):
+    country_code = Literal["ITA"]
+    region: str
+    city: str
 
 class RaceQuery(BaseModel):
     # This Pydantic model is used as a way of validating the input that comes
@@ -18,11 +33,7 @@ class RaceQuery(BaseModel):
 
     # Field restrictions such as radius_miles or race_types are meant to
     # restrict the amount of searching the LLM does to satisfy user requests
-    city: str
-    # TODO: Expand to other countries
-    country: str = "USA"
-    # Generalized term for when expanding to countries that don't have states
-    jurisdiction: str
+    location: Union[USA, Canada, Italy] = Field(discriminator="country_code")
     date_start: str  # "YYYY-MM-DD"
     date_end: str # "YYYY-MM-DD"
     race_types: List[RaceType]  # ["5k", "10k", "half-marathon", "duathlon"]

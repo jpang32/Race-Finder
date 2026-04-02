@@ -11,19 +11,19 @@ class RaceType(Enum):
     DUATHLON = "duathlon"
 
 class USA(BaseModel):
-    country_code = Literal["USA"]
+    country_code: Literal["USA"] = "USA"
     state: str
     county: str
     town: str
 
 class Canada(BaseModel):
-    country_code = Literal["CAN"]
+    country_code: Literal["CAN"] = "CAN"
     # "province" can also be set to the name of a territory
     province: str
     city: str
 
 class Italy(BaseModel):
-    country_code = Literal["ITA"]
+    country_code: Literal["ITA"] = "ITA"
     region: str
     city: str
 

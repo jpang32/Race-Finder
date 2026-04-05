@@ -1,10 +1,9 @@
-import os
+import logging
+import re
 
 from anthropic import Anthropic
-import logging
-import requests
-import re
 from bs4 import BeautifulSoup
+from curl_cffi import requests
 
 from models import RaceQuery
 
@@ -36,21 +35,26 @@ def _get_crawl_delay(base_url: str) -> int:
 def main():
     print("Hello from race-finder!")
 
-    user_query = input("What races can I help you find today?\n")
-
-    client = Anthropic()
-
-    response = client.messages.parse(
-        model="claude-opus-4-6",
-        max_tokens=1024,
-        messages=[{
-            "role": "user",
-            "content": user_query
-        }],
-        output_format=RaceQuery,
-    )
+    # user_query = input("What races can I help you find today?\n")
+    #
+    # client = Anthropic()
+    #
+    # response = client.messages.parse(
+    #     model="claude-opus-4-6",
+    #     max_tokens=1024,
+    #     messages=[{
+    #         "role": "user",
+    #         "content": user_query
+    #     }],
+    #     output_format=RaceQuery,
+    # )
 
     url_base = "https://runningintheusa.com"
+    path = "/race/list/ny/upcoming"
+
+    response = requests.get(f"{url_base}{path}", impersonate="chrome120")
+
+    print(response.text)
 
     # Make a search on the website using city, state, country and see how you would use each parameter
     # USA:

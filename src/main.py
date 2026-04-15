@@ -1,11 +1,15 @@
 import logging
 import re
 
-from anthropic import Anthropic
+import argparse
+from datetime import date
+import logging
+import sys
+
 from bs4 import BeautifulSoup
 from curl_cffi import requests
 
-from models import RaceQuery
+from models import RaceQuery, RaceType
 
 DEFAULT_CRAWL_DELAY = 5
 
@@ -35,26 +39,40 @@ def _get_crawl_delay(base_url: str) -> int:
 def main():
     print("Hello from race-finder!")
 
-    # user_query = input("What races can I help you find today?\n")
-    #
-    # client = Anthropic()
-    #
-    # response = client.messages.parse(
-    #     model="claude-opus-4-6",
-    #     max_tokens=1024,
-    #     messages=[{
-    #         "role": "user",
-    #         "content": user_query
-    #     }],
-    #     output_format=RaceQuery,
-    # )
+    parser = argparse.ArgumentParser(
+        prog="RaceFinder",
+        description="Tell us what you kind of race you're looking for, and we'll scrape the internet to help you find it!"
+    )
+
+    parser.add_argument("-r", "--race-type", type=str, help="Type of race that you are interested in running.",
+                        choices=[race_type.value for race_type in RaceType], required=True)
+
+    date_group = parser.add_argument_group("date args")
+
+    def valid_date(date_str: str) -> str:
+        valid_date_format = "%Y-%m-%d"
+        try:
+            date.strptime(date_str, valid_date_format)
+            return date_str
+        except Exception as e:
+            msg = f"Incorrectly formatted date: both start_date and end_date must be in the format {valid_date_format}"
+            raise argparse.ArgumentTypeError(msg)
+
+    date_group.add_argument("-s", "--start-date", type=valid_date, help="Start date of the search", required=True)
+    date_group.add_argument("-e", "--end-date", type=valid_date, help="End date of the search", required=True)
+
+    args = parser.parse_args()
+
+    print(args.start_date)
+    print(args)
+
 
     url_base = "https://runningintheusa.com"
     path = "/race/list/ny/upcoming"
 
-    response = requests.get(f"{url_base}{path}", impersonate="chrome120")
+    # response = requests.get(f"{url_base}{path}", impersonate="chrome120")
 
-    print(response.text)
+    # print(response.text)
 
     # Make a search on the website using city, state, country and see how you would use each parameter
     # USA:

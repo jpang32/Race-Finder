@@ -1,1 +1,1 @@
-from models.race_query import RaceQuery
+from models.race_query import RaceQuery, RaceType

@@ -36,7 +36,8 @@ class RaceQuery(BaseModel):
     location: Union[USA, Canada, Italy] = Field(discriminator="country_code")
     date_start: str  # "YYYY-MM-DD"
     date_end: str # "YYYY-MM-DD"
-    race_types: List[RaceType]  # ["5k", "10k", "half-marathon", "duathlon"]
+    race_types: List[RaceType]
+    # Not yet supported:
     skill_level: Optional[str]  # "beginner" | "intermediate" | "advanced"
     transportation: Optional[str]
     radius_miles: Optional[int]

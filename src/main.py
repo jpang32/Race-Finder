@@ -1,15 +1,11 @@
+import argparse
 import logging
 import re
-
-import argparse
 from datetime import date
-import logging
-import sys
 
-from bs4 import BeautifulSoup
 from curl_cffi import requests
 
-from models import RaceQuery, RaceType
+from models import RaceType
 
 DEFAULT_CRAWL_DELAY = 5
 
@@ -41,7 +37,8 @@ def main():
 
     parser = argparse.ArgumentParser(
         prog="RaceFinder",
-        description="Tell us what you kind of race you're looking for, and we'll scrape the internet to help you find it!"
+        description="Tell us what you kind of race you're looking for, and we'll scrape the "
+                    "internet to help you find it!"
     )
 
     parser.add_argument("-r", "--race-type", type=str, help="Type of race that you are interested in running.",
@@ -54,7 +51,7 @@ def main():
         try:
             date.strptime(date_str, valid_date_format)
             return date_str
-        except Exception as e:
+        except Exception:
             msg = f"Incorrectly formatted date: both start_date and end_date must be in the format {valid_date_format}"
             raise argparse.ArgumentTypeError(msg)
 
@@ -66,9 +63,8 @@ def main():
     print(args.start_date)
     print(args)
 
-
-    url_base = "https://runningintheusa.com"
-    path = "/race/list/ny/upcoming"
+    # url_base = "https://runningintheusa.com"
+    # path = "/race/list/ny/upcoming"
 
     # response = requests.get(f"{url_base}{path}", impersonate="chrome120")
 

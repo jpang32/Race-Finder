@@ -1,7 +1,8 @@
-from typing import List, Optional, Literal, Union
-
 from enum import Enum
+from typing import List, Literal, Optional, Union
+
 from pydantic import BaseModel, Field
+
 
 class RaceType(Enum):
     FIVE_K = "5k"

@@ -1,39 +1,14 @@
 import argparse
-import logging
 import re
 from datetime import date
 
-from curl_cffi import requests
+from bs4 import BeautifulSoup
 
 from models import RaceType
-
-DEFAULT_CRAWL_DELAY = 5
-
-
-def _get_crawl_delay(base_url: str) -> int:
-	"""Grabs the crawl delay from a robots.txt file of a website.
-	Defines how long to wait between scraper requests.
-
-	:param base_url: The base url of the site that is being scraped
-	:return: Integer representing the recommended delay between requests, in seconds
-	"""
-	robots_txt = requests.get(f"{base_url}/robots.txt")
-
-	crawl_delay_search = re.search(r"Crawl-?Delay[^\d]+(\d*)", robots_txt.text, re.IGNORECASE)
-
-	if crawl_delay_search is None or not crawl_delay_search.group(1):
-		logging.log(
-			logging.DEBUG, f"Crawl Delay not found in robots.txt. Setting to default value of {DEFAULT_CRAWL_DELAY})"
-		)
-		crawl_delay = DEFAULT_CRAWL_DELAY
-	else:
-		crawl_delay = crawl_delay_search.group(1)
-		logging.log(logging.DEBUG, f"crawl_delay = {crawl_delay}")
-
-	return int(crawl_delay)
+from scraper.scraper import fetch_page
 
 
-def parse_args():
+def _parse_args():
 	parser = argparse.ArgumentParser(
 		prog="RaceFinder",
 		description="Tell us what you kind of race you're looking for, and we'll scrape the "
@@ -49,10 +24,16 @@ def parse_args():
 		required=True,
 	)
 
+	parser.add_argument(
+		"-s",
+		"--state",
+		type=str,
+		help="US state of race that you are interested in running.",
+	)
 	date_group = parser.add_argument_group("date args")
 
 	def valid_date(date_str: str) -> str:
-		valid_date_format = "%Y-%m-%d"
+		valid_date_format = "%m-%d-%Y"
 		try:
 			date.strptime(date_str, valid_date_format)
 			return date_str
@@ -60,24 +41,72 @@ def parse_args():
 			msg = f"Incorrectly formatted date: both start_date and end_date must be in the format {valid_date_format}"
 			raise argparse.ArgumentTypeError(msg)
 
-	date_group.add_argument("-s", "--start-date", type=valid_date, help="Start date of the search", required=True)
+	date_group.add_argument("-b", "--start-date", type=valid_date, help="Start date of the search", required=True)
 	date_group.add_argument("-e", "--end-date", type=valid_date, help="End date of the search", required=True)
 
 	return parser.parse_args()
 
 
+def _fetch_race_info(
+	url_base: str,
+	state: str,
+	start_date: str,
+	end_date: str,
+	race_type: str,
+):
+	# Example URL with location, date, race type filters:
+	# https://runningintheusa.com/classic/list/within-50-miles-of-albany-ny/4-1-2026-to-4-30-2026/5k
+	# With just the state: https://runningintheusa.com/classic/list/ny/4-1-2026-to-4-30-2026/5k
+	path_base = "classic/list"
+	path_params = f"{state}/{start_date}/{end_date}/{race_type}"
+	url = f"{url_base}/{path_base}/{path_params}"
+	print(f"Fetching: {url}")
+
+	html_content = fetch_page(url)
+
+	soup = BeautifulSoup(html_content, "html.parser")
+	race_info_rows = soup.find_all("tr")
+
+	for row in race_info_rows[1:]:
+		race_info_cells = row.find_all("td")
+
+		# Skip sub-rows that don't have the expected columns (e.g. "Boston Marathon Qualifier" badges)
+		if len(race_info_cells) < 4:
+			continue
+
+		# Race Date
+		race_date_cell = race_info_cells[1]
+		race_date = race_date_cell.find(string=re.compile(r".* \d\d?, \d\d\d\d"))
+
+		# Race Title (and types)
+		race_title_cell = race_info_cells[2]
+		race_title = race_title_cell.find("b")
+		race_types = race_title_cell.find(string=re.compile("(.*?) run"))
+
+		race_title_and_types = f"{race_title} ({race_types})"
+
+		# Race Location
+		race_location_cell = race_info_cells[3]
+		race_location = race_location_cell.find("b")
+
+		print(race_date, race_title_and_types, race_location)
+
+	return
+
+
 def main():
 	print("Hello from race-finder!")
-	#
-	# # args = parse_args()
-	#
-	# url_base = "https://runningintheusa.com"
-	# path_base = "/race/list/ny/upcoming"
-	# path_params = ""
-	#
-	# response = requests.get(f"{url_base}{path}", impersonate="chrome120")
-	#
-	# soup = BeautifulSoup(response.text, "html.parser")
+
+	args = _parse_args()
+	state = args.state.lower()
+	start_date = args.start_date
+	end_date = args.end_date
+	race_type = args.race_type
+
+	url_base = "https://runningintheusa.com"
+
+	_fetch_race_info(url_base, state, start_date, end_date, race_type)
+
 	# soup
 	# Grab tables
 	# Grab the body of the table
@@ -86,6 +115,7 @@ def main():
 
 	# If user
 	# Filter on the date column first,
+	print()
 
 
 if __name__ == "__main__":

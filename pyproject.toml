@@ -10,7 +10,8 @@ dependencies = [
     "curl_cffi>=0.7",
     "pydantic>=2.12.5",
     "undetected-chromedriver>=3.5.5",
-    "setuptools==84.0.0"
+    "setuptools==84.0.0",
+    "sqlmodel>=0.0.42",
 ]
 
 [dependency-groups]

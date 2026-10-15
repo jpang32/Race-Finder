@@ -3,3 +3,4 @@ __pycache__
 
 # Pycharm config
 .idea/
+.aider*

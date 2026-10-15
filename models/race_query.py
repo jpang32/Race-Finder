@@ -12,26 +12,6 @@ class RaceType(Enum):
 	DUATHLON = "duathlon"
 
 
-class USA(BaseModel):
-	country_code: Literal["USA"] = "USA"
-	state: str
-	county: str
-	town: str
-
-
-class Canada(BaseModel):
-	country_code: Literal["CAN"] = "CAN"
-	# "province" can also be set to the name of a territory
-	province: str
-	city: str
-
-
-class Italy(BaseModel):
-	country_code: Literal["ITA"] = "ITA"
-	region: str
-	city: str
-
-
 class RaceQuery(BaseModel):
 	# This Pydantic model is used as a way of validating the input that comes
 	# from the LLM model call, and ultimately, from the user

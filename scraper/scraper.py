@@ -8,6 +8,7 @@ from pathlib import Path
 
 import undetected_chromedriver as uc
 from curl_cffi import requests as cffi_requests
+from bs4 import BeautifulSoup  # Import BeautifulSoup here
 
 COOKIE_DIR = Path.home() / ".race-finder"
 COOKIE_FILE = COOKIE_DIR / "cookies.json"
@@ -138,7 +139,7 @@ class RaceScraper:
 
         html_content = self._fetch_page(url)
 
-        soup = BeautifulSoup(html_content, "html.parser")
+        soup = BeautifulSoup(html_content, "html.parser")  # Import BeautifulSoup here
         race_info_rows = soup.find_all("tr")
 
         for row in race_info_rows[1:]:

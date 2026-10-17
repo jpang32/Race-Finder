@@ -56,8 +56,8 @@ class RaceScraper:
                 data = json.loads(COOKIE_FILE.read_text())
                 if isinstance(data, dict):
                     return data
-            except json.JSONDecodeError, OSError:
-                pass
+            except (json.JSONDecodeError, OSError) as e:
+                logger.error(f"Error loading cookies: {e}")
         return {}
 
     def _fetch_with_browser(self, url: str, cookies: dict[str, str]) -> str:

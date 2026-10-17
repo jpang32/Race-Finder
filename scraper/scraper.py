@@ -30,11 +30,18 @@ class RaceScraper:
         Tries curl_cffi first (fast), falls back to a real browser if needed.
         Cookies are persisted across calls and across process runs.
         """
-        cookies = self._load_cookies()
+        if self._read_and_validate_token():
+            # Use curl_cffi with the token
+            cookies = self._load_cookies()
+            headers = {
+                "Cookie": "; ".join([f"{name}={value}" for name, value in cookies.items()]),
+            }
+            response = cffi_requests.get(url, headers=headers)
+            if response.status_code == 200:
+                return response.text
 
-        # Tier 2: real browser with challenge solving
-        logger.info("Falling back to Tier 2 (browser) for %s", url)
-        print("curl_cffi blocked — launching browser to solve Cloudflare challenge...")
+        logger.info("Falling back to browser method for %s", url)
+        print("invalid token or curl_cffi failed — launching browser to solve Cloudflare challenge...")
         html = self._fetch_with_browser(url, cookies)
         return html
 
@@ -82,24 +89,10 @@ class RaceScraper:
 
             driver.get(url)
 
-            # Wait for Cloudflare Turnstile / JS challenge to resolve
+            # Simplify the Cloudflare challenge handling
+            # Remove or greatly simplify the polling for the Cloudflare challenge
             time.sleep(_CF_WAIT_INITIAL)
             html = driver.page_source
-
-            polls = 0
-            while self._is_cloudflare_challenge(html) and polls < _CF_MAX_POLLS:
-                polls += 1
-                logger.info("Waiting for Cloudflare challenge... attempt %d/%d", polls, _CF_MAX_POLLS)
-                print(f"Waiting for Cloudflare challenge... attempt {polls}/{_CF_MAX_POLLS}")
-                time.sleep(_CF_POLL_INTERVAL)
-                html = driver.page_source
-
-            if self._is_cloudflare_challenge(html):
-                logger.warning("Cloudflare challenge did not resolve after %d attempts", _CF_MAX_POLLS)
-                print("WARNING: Cloudflare challenge did not resolve. You may need to solve it manually.")
-                # Give a final window for manual solving
-                time.sleep(15)
-                html = driver.page_source
 
             self._save_cookies(driver)
 

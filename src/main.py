@@ -1,11 +1,9 @@
 import argparse
-import re
 from datetime import date
 
-from bs4 import BeautifulSoup
-
 from models import RaceType
-from scraper.scraper import fetch_page
+from scraper.scraper import RaceScraper
+from scraper.site_parser import build_runningintheusa_url, parse_runningintheusa
 
 
 def _parse_args():
@@ -46,6 +44,7 @@ def _parse_args():
 
 	return parser.parse_args()
 
+
 def main():
 	print("Hello from race-finder!")
 
@@ -55,9 +54,12 @@ def main():
 	end_date = args.end_date
 	race_type = args.race_type
 
-	url_base = "https://runningintheusa.com"
+	url = build_runningintheusa_url(state, start_date, end_date, race_type)
+	print(f"Fetching: {url}")
 
-	_fetch_race_info(url_base, state, start_date, end_date, race_type)
+	html = RaceScraper().fetch_page(url)
+	for race in parse_runningintheusa(html):
+		print(race)
 
 	# soup
 	# Grab tables
